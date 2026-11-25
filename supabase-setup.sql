@@ -1,0 +1,12 @@
+create table if not exists content(id int primary key, data jsonb not null);
+create table if not exists orders(id bigint generated always as identity primary key, created_at timestamptz default now(), code text, name text, gender text, age text, about text, stories jsonb, message text, photo_path text);
+alter table content enable row level security;
+alter table orders enable row level security;
+create policy "site reads content" on content for select using (true);
+create policy "admin writes content" on content for all to authenticated using (true) with check (true);
+create policy "anyone adds order" on orders for insert to anon with check (true);
+create policy "admin manages orders" on orders for all to authenticated using (true) with check (true);
+insert into storage.buckets (id,name,public) values ('media','media',true),('uploads','uploads',false) on conflict do nothing;
+create policy "anyone uploads photo" on storage.objects for insert to anon with check (bucket_id='uploads');
+create policy "public reads media" on storage.objects for select using (bucket_id='media');
+create policy "admin manages storage" on storage.objects for all to authenticated using (true) with check (true);
